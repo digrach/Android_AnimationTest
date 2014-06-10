@@ -1,5 +1,7 @@
 package rach.dig.android_animationtest;
 
+import android.util.Log;
+
 public class Particle {
 
 	private double posY;
@@ -13,11 +15,18 @@ public class Particle {
 	private double travelRate;
 	private int maxCollisionSize;
 
-	public Particle(double posx, double posy, double targetx, double targety) {
+	private double spawnFieldWidth;
+	private double spawnFieldHeight;
+
+	private boolean hasReachedTarget;
+
+	public Particle(double posx, double posy, double targetx, double targety, double spawnFieldWidth, double spawnFieldHeight) {
 		this.posY = posy;
 		this.posX = posx;
 		this.targetX = targetx;
 		this.targetY = targety;
+		this.spawnFieldWidth = spawnFieldWidth;
+		this.spawnFieldHeight = spawnFieldHeight;
 		size = 10;
 		color = makeColor();
 		randomEase = Math.random() * 0.03;
@@ -25,9 +34,54 @@ public class Particle {
 		maxCollisionSize = (int) (size * 2);
 	}
 
-	public void update() {
+	public void update(double spawnFieldWidth, double spawnFieldHeight) {
+	
+		if (spawnFieldHeight != this.spawnFieldHeight && hasReachedTarget == false) {
+			if (targetX > spawnFieldWidth || targetY > spawnFieldHeight) {
+				resetTarget(spawnFieldWidth,spawnFieldHeight);
+			}
+		} 
+		update();
+	}
+
+	private void update() {
+
+		double floorx = Math.floor(posX + 0.5);
+		double floory = Math.floor(posY + 0.5);
+
+		// If particle has reached the target.
+		if (floorx == targetX && floory == targetY){
+			hasReachedTarget = true;
+		}
+
 		posX += calculateXDistance(targetX) * (travelRate);
 		posY += calculateYDistance(targetY) * (travelRate + randomEase);
+	}
+
+	private void resetTarget(double spawnFieldWidth, double spawnFieldHeight) {
+		double widthChange;
+		if (spawnFieldWidth < this.spawnFieldWidth) {
+			widthChange = spawnFieldWidth / this.spawnFieldWidth;
+			double diff = targetX * widthChange;
+			targetX = diff;
+		} else {
+			widthChange = this.spawnFieldWidth / spawnFieldWidth;
+			double diff = targetX * widthChange;
+			targetX = diff;
+		}
+		double heightChange;
+		if (spawnFieldHeight < this.spawnFieldHeight) {
+			heightChange = spawnFieldHeight / this.spawnFieldHeight;
+			double diff = targetY * heightChange;
+			targetY = diff;
+		} else {
+			heightChange = this.spawnFieldHeight / spawnFieldHeight;
+			double diff = targetY * heightChange;
+			targetY = diff;
+		}
+
+		this.spawnFieldWidth = spawnFieldWidth;
+		this.spawnFieldHeight = spawnFieldHeight;
 	}
 
 	private double  calculateYDistance(double yTarget) {
